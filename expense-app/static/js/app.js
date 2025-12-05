@@ -54,19 +54,18 @@ const app = {
                 const avatarUrl = data.avatar_path || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=random`;
                 document.getElementById('nav-user-avatar').src = avatarUrl;
 
-                // Show Menu
+                // Show Menu & Nav Actions
                 document.getElementById('user-menu-container').classList.remove('hidden');
                 document.getElementById('user-menu-container').classList.add('flex');
-
-                // document.getElementById('btn-logout').classList.remove('hidden'); // Old button removed
+                document.getElementById('nav-actions').classList.remove('hidden'); // Show nav actions
 
                 this.showHome();
             } else {
-                this.showLogin();
+                this.showLanding(); // Default to landing instead of login
             }
         } catch (error) {
             console.error('Error checking auth:', error);
-            this.showLogin();
+            this.showLanding();
         }
     },
 
@@ -125,10 +124,18 @@ const app = {
     },
 
     logout: async function () {
-        await fetch('/api/auth/logout', { method: 'POST' });
-        this.currentUser = null;
-        this.showLogin();
-        this.updateNav(false);
+        try {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            this.currentUser = null;
+            this.currentGroupId = null;
+            document.getElementById('nav-actions').classList.add('hidden'); // Hide nav actions
+            document.getElementById('user-menu-container').classList.add('hidden');
+            document.getElementById('user-menu-container').classList.remove('flex');
+
+            this.showLanding();
+        } catch (error) {
+            console.error('Error logging out:', error);
+        }
     },
 
     updateNav: function (isLoggedIn) {
@@ -151,6 +158,7 @@ const app = {
     // --- Navigation & Views ---
 
     hideAllViews: function () {
+        document.getElementById('view-landing').classList.add('hidden'); // Landing
         document.getElementById('view-login').classList.add('hidden');
         document.getElementById('view-register').classList.add('hidden');
         document.getElementById('view-home').classList.add('hidden');
@@ -161,6 +169,11 @@ const app = {
         document.getElementById('nav-btn-expenses').classList.add('hidden');
         document.getElementById('nav-btn-balances').classList.add('hidden');
         document.getElementById('user-dropdown').classList.add('hidden'); // Close dropdown
+    },
+
+    showLanding: function () {
+        this.hideAllViews();
+        document.getElementById('view-landing').classList.remove('hidden');
     },
 
     showLogin: function () {
@@ -176,10 +189,13 @@ const app = {
     },
 
     showHome: function () {
-        if (!this.currentUser) return this.showLogin();
+        if (!this.currentUser) return this.showLanding(); // Redirect if not logged URLSearchParams
 
         this.hideAllViews();
         document.getElementById('view-home').classList.remove('hidden');
+
+        // Make sure nav actions are visible 
+        document.getElementById('nav-actions').classList.remove('hidden');
 
         this.currentGroupId = null;
         this.loadRecentGroups();

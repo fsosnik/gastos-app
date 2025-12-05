@@ -33,39 +33,41 @@
     class="bg-gray-50 text-gray-800 font-sans min-h-screen dark:bg-gray-900 dark:text-gray-100 transition-colors duration-200">
 
     <!-- Navigation -->
-    <nav class="bg-indigo-600 text-white shadow-lg sticky top-0 z-50 dark:bg-indigo-900">
+    <nav class="bg-indigo-600 text-white shadow-lg sticky top-0 z-50 dark:bg-indigo-900 transition-colors duration-200">
         <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
-            <h1 class="text-xl font-bold cursor-pointer" onclick="app.showHome()">
+            <h1 class="text-xl font-bold cursor-pointer flex items-center" onclick="app.showHome()">
                 <i class="fas fa-wallet mr-2"></i>Cuentas Claras 💰
             </h1>
-            <div id="nav-actions" class="hidden space-x-4 flex items-center">
-                <button onclick="app.toggleTheme()" class="hover:text-indigo-200 p-2 rounded-full">
+            <div class="flex items-center space-x-4">
+                <button onclick="app.toggleTheme()" class="hover:text-indigo-200 p-2 rounded-full focus:outline-none">
                     <i id="theme-icon" class="fas fa-moon"></i>
                 </button>
-                <button onclick="app.showGroupView(app.currentGroupId)" id="nav-btn-expenses"
-                    class="hover:text-indigo-200 hidden">Gastos 📝</button>
-                <button onclick="app.showBalanceView()" id="nav-btn-balances"
-                    class="hover:text-indigo-200 hidden">Saldos ⚖️</button>
-                <!-- User Dropdown -->
-                <div class="relative hidden" id="user-menu-container">
-                    <button onclick="app.toggleUserMenu()" class="flex items-center space-x-2 focus:outline-none">
-                        <img id="nav-user-avatar" src="https://ui-avatars.com/api/?name=User" alt="Avatar"
-                            class="w-8 h-8 rounded-full border border-indigo-300">
-                        <span id="user-display-name" class="text-sm font-semibold hidden md:block">Usuario</span>
-                        <i class="fas fa-chevron-down text-xs"></i>
-                    </button>
-                    <!-- Dropdown Content -->
-                    <div id="user-dropdown"
-                        class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 dark:bg-gray-800 dark:border dark:border-gray-700">
-                        <a href="#" onclick="app.showProfileView()"
-                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700">
-                            <i class="fas fa-user-circle mr-2"></i>Mi Perfil
-                        </a>
-                        <div class="border-t border-gray-100 dark:border-gray-700"></div>
-                        <a href="#" onclick="app.logout()"
-                            class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-700">
-                            <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
-                        </a>
+                <div id="nav-actions" class="hidden space-x-4 flex items-center">
+                    <button onclick="app.showGroupView(app.currentGroupId)" id="nav-btn-expenses"
+                        class="hover:text-indigo-200 hidden">Gastos 📝</button>
+                    <button onclick="app.showBalanceView()" id="nav-btn-balances"
+                        class="hover:text-indigo-200 hidden">Saldos ⚖️</button>
+                    <!-- User Dropdown -->
+                    <div class="relative hidden" id="user-menu-container">
+                        <button onclick="app.toggleUserMenu()" class="flex items-center space-x-2 focus:outline-none">
+                            <img id="nav-user-avatar" src="https://ui-avatars.com/api/?name=User" alt="Avatar"
+                                class="w-8 h-8 rounded-full border border-indigo-300">
+                            <span id="user-display-name" class="text-sm font-semibold hidden md:block">Usuario</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        <!-- Dropdown Content -->
+                        <div id="user-dropdown"
+                            class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 dark:bg-gray-800 dark:border dark:border-gray-700">
+                            <a href="#" onclick="app.showProfileView()"
+                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700">
+                                <i class="fas fa-user-circle mr-2"></i>Mi Perfil
+                            </a>
+                            <div class="border-t border-gray-100 dark:border-gray-700"></div>
+                            <a href="#" onclick="app.logout()"
+                                class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-700">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -74,6 +76,61 @@
 
     <!-- Main Content -->
     <main class="max-w-4xl mx-auto px-4 py-6">
+
+        <!-- View: Landing Page -->
+        <div id="view-landing" class="hidden fade-in text-center mt-10">
+            <div class="mb-12">
+                <i class="fas fa-users text-6xl text-indigo-600 mb-6 dark:text-indigo-400"></i>
+                <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4 dark:text-white leading-tight">
+                    Cuentas Claras,<br>Amistades Largas 🤝
+                </h1>
+                <p class="text-xl text-gray-600 mb-8 max-w-2xl mx-auto dark:text-gray-300">
+                    La forma más simple de dividir gastos en viajes, salidas y grupos.
+                    Olvídate de los cálculos complicados.
+                </p>
+
+                <div class="flex flex-col md:flex-row justify-center gap-4">
+                    <button onclick="app.showRegister()"
+                        class="bg-indigo-600 text-white px-8 py-3 rounded-full text-lg font-bold hover:bg-indigo-700 transition shadow-lg transform hover:-translate-y-1">
+                        Registrarse Gratis 🚀
+                    </button>
+                    <button onclick="app.showLogin()"
+                        class="px-8 py-3 rounded-full text-lg font-bold border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:border-indigo-400 dark:hover:bg-gray-800 transition">
+                        Ya tengo cuenta 👋
+                    </button>
+                </div>
+            </div>
+
+            <!-- Features -->
+            <div class="grid md:grid-cols-3 gap-8 mt-16 text-left">
+                <div class="bg-white p-6 rounded-xl shadow-md dark:bg-gray-800 dark:border dark:border-gray-700">
+                    <div
+                        class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4 dark:bg-green-900">
+                        <i class="fas fa-money-bill-wave text-green-600 dark:text-green-300 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 dark:text-white">Divide Gastos</h3>
+                    <p class="text-gray-600 dark:text-gray-400">Registra quién pagó qué y divide equitativamente entre
+                        el grupo.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md dark:bg-gray-800 dark:border dark:border-gray-700">
+                    <div
+                        class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4 dark:bg-blue-900">
+                        <i class="fas fa-globe text-blue-600 dark:text-blue-300 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 dark:text-white">Multi-moneda</h3>
+                    <p class="text-gray-600 dark:text-gray-400">Soporte para múltiples monedas en tus viajes
+                        internacionales.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md dark:bg-gray-800 dark:border dark:border-gray-700">
+                    <div
+                        class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-4 dark:bg-purple-900">
+                        <i class="fas fa-mobile-alt text-purple-600 dark:text-purple-300 text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 dark:text-white">Acceso Fácil</h3>
+                    <p class="text-gray-600 dark:text-gray-400">Accede desde cualquier dispositivo. Simple y rápido.</p>
+                </div>
+            </div>
+        </div>
 
         <!-- View: Login -->
         <div id="view-login" class="fade-in max-w-md mx-auto mt-10">
