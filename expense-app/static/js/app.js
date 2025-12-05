@@ -184,11 +184,17 @@ const app = {
         document.getElementById('view-admin').classList.add('hidden');
         document.getElementById('view-forgot-password').classList.add('hidden');
         document.getElementById('view-reset-password').classList.add('hidden');
+        document.getElementById('view-manual').classList.add('hidden');
 
         // Hide group specific nav items
         document.getElementById('nav-btn-expenses').classList.add('hidden');
         document.getElementById('nav-btn-balances').classList.add('hidden');
         document.getElementById('user-dropdown').classList.add('hidden'); // Close dropdown
+    },
+
+    showManual: function () {
+        this.hideAllViews();
+        document.getElementById('view-manual').classList.remove('hidden');
     },
 
     showLanding: function () {
