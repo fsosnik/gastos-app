@@ -7,7 +7,15 @@ const app = {
     init: async function () {
         console.log('App initialized 🚀');
         this.initTheme();
-        await this.checkAuth();
+        // Check for Reset Token in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const resetToken = urlParams.get('reset_token');
+
+        if (resetToken) {
+            this.showResetPasswordView(resetToken);
+        } else {
+            await this.checkAuth();
+        }
     },
 
     // --- Theme ---
@@ -54,10 +62,19 @@ const app = {
                 const avatarUrl = data.avatar_path || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=random`;
                 document.getElementById('nav-user-avatar').src = avatarUrl;
 
+                document.getElementById('nav-user-avatar').src = avatarUrl;
+
                 // Show Menu & Nav Actions
                 document.getElementById('user-menu-container').classList.remove('hidden');
                 document.getElementById('user-menu-container').classList.add('flex');
                 document.getElementById('nav-actions').classList.remove('hidden'); // Show nav actions
+
+                // Admin Button
+                if (data.is_admin) {
+                    document.getElementById('nav-item-admin').classList.remove('hidden');
+                } else {
+                    document.getElementById('nav-item-admin').classList.add('hidden');
+                }
 
                 this.showHome();
             } else {
@@ -164,6 +181,9 @@ const app = {
         document.getElementById('view-home').classList.add('hidden');
         document.getElementById('view-group').classList.add('hidden');
         document.getElementById('view-profile').classList.add('hidden');
+        document.getElementById('view-admin').classList.add('hidden');
+        document.getElementById('view-forgot-password').classList.add('hidden');
+        document.getElementById('view-reset-password').classList.add('hidden');
 
         // Hide group specific nav items
         document.getElementById('nav-btn-expenses').classList.add('hidden');
@@ -183,6 +203,64 @@ const app = {
         document.getElementById('user-menu-container').classList.remove('flex');
     },
 
+    showForgotPassword: function () {
+        this.hideAllViews();
+        document.getElementById('view-forgot-password').classList.remove('hidden');
+    },
+
+    showResetPasswordView: function (token) {
+        this.hideAllViews();
+        document.getElementById('reset-token').value = token; // Store token in hidden input
+        document.getElementById('view-reset-password').classList.remove('hidden');
+    },
+
+    requestPasswordReset: async function () {
+        const email = document.getElementById('forgot-email').value;
+        if (!email) return alert('Por favor ingresa tu email.');
+
+        try {
+            const response = await fetch('/api/auth/forgot-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+            const data = await response.json();
+            alert(data.message);
+            if (response.ok) this.showLogin();
+        } catch (error) {
+            console.error(error);
+            alert('Error al solicitar recuperación.');
+        }
+    },
+
+    resetPassword: async function () {
+        const token = document.getElementById('reset-token').value;
+        const newPassword = document.getElementById('reset-new-password').value;
+
+        if (!newPassword) return alert('Ingresa una nueva contraseña.');
+
+        try {
+            const response = await fetch('/api/auth/reset-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token, new_password: newPassword })
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                alert(data.message);
+                // Clear URL params so refresh doesn't trigger reset again
+                window.history.replaceState({}, document.title, "/");
+                this.showLogin();
+            } else {
+                alert(data.error || 'Error al restablecer contraseña.');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Error al restablecer contraseña.');
+        }
+    },
+
     showRegister: function () {
         this.hideAllViews();
         document.getElementById('view-register').classList.remove('hidden');
@@ -199,6 +277,126 @@ const app = {
 
         this.currentGroupId = null;
         this.loadRecentGroups();
+    },
+
+    showAdminView: function () {
+        this.hideAllViews();
+        document.getElementById('view-admin').classList.remove('hidden');
+        this.switchAdminTab('users'); // Default tab
+    },
+
+    // --- Admin Logic ---
+
+    switchAdminTab: function (tabName) {
+        const usersContainer = document.getElementById('admin-users-container');
+        const groupsContainer = document.getElementById('admin-groups-container');
+        const tabUsers = document.getElementById('tab-admin-users');
+        const tabGroups = document.getElementById('tab-admin-groups');
+
+        if (tabName === 'users') {
+            usersContainer.classList.remove('hidden');
+            groupsContainer.classList.add('hidden');
+            tabUsers.classList.add('border-indigo-600', 'text-indigo-600', 'dark:text-indigo-400', 'dark:border-indigo-400');
+            tabUsers.classList.remove('border-transparent', 'text-gray-500');
+            tabGroups.classList.remove('border-indigo-600', 'text-indigo-600', 'dark:text-indigo-400', 'dark:border-indigo-400');
+            tabGroups.classList.add('border-transparent', 'text-gray-500');
+            this.loadAdminUsers();
+        } else {
+            usersContainer.classList.add('hidden');
+            groupsContainer.classList.remove('hidden');
+            tabGroups.classList.add('border-indigo-600', 'text-indigo-600', 'dark:text-indigo-400', 'dark:border-indigo-400');
+            tabGroups.classList.remove('border-transparent', 'text-gray-500');
+            tabUsers.classList.remove('border-indigo-600', 'text-indigo-600', 'dark:text-indigo-400', 'dark:border-indigo-400');
+            tabUsers.classList.add('border-transparent', 'text-gray-500');
+            this.loadAdminGroups();
+        }
+    },
+
+    loadAdminUsers: async function () {
+        try {
+            const response = await fetch('/api/admin/users');
+            if (response.ok) {
+                const users = await response.json();
+                const tbody = document.getElementById('admin-users-list');
+                tbody.innerHTML = '';
+                users.forEach(user => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-gray-50 dark:hover:bg-gray-700 transition';
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 dark:text-gray-300">#${user.id}</td>
+                        <td class="px-6 py-4 font-medium dark:text-white">${user.name}</td>
+                        <td class="px-6 py-4 dark:text-gray-300">${user.email}</td>
+                        <td class="px-6 py-4">
+                            ${user.is_admin ? '<span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full dark:bg-yellow-900 dark:text-yellow-200">Admin</span>' : '<span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full dark:bg-gray-700 dark:text-gray-300">User</span>'}
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                             ${!user.is_admin ? `<button onclick="app.deleteUser(${user.id})" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"><i class="fas fa-trash"></i></button>` : ''}
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        } catch (error) {
+            console.error('Error loading admin users:', error);
+        }
+    },
+
+    loadAdminGroups: async function () {
+        try {
+            const response = await fetch('/api/admin/groups');
+            if (response.ok) {
+                const groups = await response.json();
+                const tbody = document.getElementById('admin-groups-list');
+                tbody.innerHTML = '';
+                groups.forEach(group => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-gray-50 dark:hover:bg-gray-700 transition';
+                    tr.innerHTML = `
+                         <td class="px-6 py-4 dark:text-gray-300">#${group.id}</td>
+                         <td class="px-6 py-4 font-medium dark:text-white">${group.name}</td>
+                         <td class="px-6 py-4 dark:text-gray-300">${group.created_by_name}</td>
+                         <td class="px-6 py-4 dark:text-gray-300">${group.participant_count}</td>
+                         <td class="px-6 py-4 dark:text-gray-300 text-xs">${new Date(group.created_at).toLocaleDateString()}</td>
+                         <td class="px-6 py-4 text-right">
+                             <button onclick="app.deleteGroup(${group.id})" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"><i class="fas fa-trash"></i></button>
+                         </td>
+                     `;
+                    tbody.appendChild(tr);
+                });
+            }
+        } catch (error) {
+            console.error('Error loading admin groups:', error);
+        }
+    },
+
+    deleteUser: async function (id) {
+        if (!confirm('¿Estás seguro de eliminar este usuario? Esta acción no se puede deshacer.')) return;
+        try {
+            const response = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+            if (response.ok) {
+                this.loadAdminUsers();
+            } else {
+                alert('No se pudo eliminar el usuario.');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Error al eliminar usuario.');
+        }
+    },
+
+    deleteGroup: async function (id) {
+        if (!confirm('¿Estás seguro de eliminar este grupo? Se borrarán todos sus gastos.')) return;
+        try {
+            const response = await fetch(`/api/admin/groups/${id}`, { method: 'DELETE' });
+            if (response.ok) {
+                this.loadAdminGroups();
+            } else {
+                alert('No se pudo eliminar el grupo.');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Error al eliminar grupo.');
+        }
     },
 
     showGroupView: async function (groupId) {

@@ -5,6 +5,9 @@ from datetime import datetime
 import os
 from functools import wraps
 from werkzeug.utils import secure_filename
+from flask_cors import CORS
+from flask_mail import Mail, Message
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired
 
 app = Flask(__name__)
 # Use absolute path for database to avoid issues on hosting
@@ -12,6 +15,19 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'database.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'supersecretkey' # Change this in production
+
+# Mail Config
+app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USER')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'true').lower() in ['true', 'on', '1']
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', app.config['MAIL_USERNAME'])
+
+mail = Mail(app)
+s = URLSafeTimedSerializer(app.secret_key)
+
+CORS(app, supports_credentials=True)
 app.config['UPLOAD_FOLDER'] = os.path.join(basedir, 'static/uploads/avatars')
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 db = SQLAlchemy(app)
@@ -44,6 +60,7 @@ class User(db.Model):
     password_hash = db.Column(db.String(255))
     name = db.Column(db.String(100), nullable=False)
     avatar_path = db.Column(db.String(255))
+    is_admin = db.Column(db.Boolean, default=False)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -145,11 +162,68 @@ def login():
             'user': {
                 'id': user.id, 
                 'name': user.name,
-                'avatar_path': user.avatar_path
+                'avatar_path': user.avatar_path,
+                'is_admin': user.is_admin
             }
         }), 200
     
     return jsonify({'error': 'Invalid credentials'}), 401
+
+@app.route('/api/auth/forgot-password', methods=['POST'])
+def forgot_password():
+    data = request.json
+    email = data.get('email')
+    user = User.query.filter_by(email=email).first()
+    
+    if not user:
+        # Don't reveal if user exists or not for security, but for UX maybe we say "If email exists..."
+        return jsonify({'message': 'Si el email existe, recibirás un enlace.'}), 200
+        
+    token = s.dumps(email, salt='email-confirm')
+    
+    # In production, use the actual domain. For local, user might be on localhost.
+    # We can try to guess or use an ENV var for FRONTEND_URL.
+    # For this task, we will construct a link assuming the frontend handles /?reset_token=...
+    # On Render, it will be the render URL.
+    
+    # Get base URL from request or ENV
+    base_url = os.environ.get('BASE_URL', request.host_url).rstrip('/')
+    link = f"{base_url}/?reset_token={token}"
+    
+    msg = Message('Recuperar Contraseña - Gastos Compartidos', recipients=[email])
+    msg.body = f'Hola {user.name},\n\nHaz clic en el siguiente enlace para restablecer tu contraseña:\n{link}\n\nEl enlace expira en 1 hora.'
+    
+    try:
+        mail.send(msg)
+    except Exception as e:
+        print(f"Error sending email: {e}")
+        # Return success anyway to avoid leaking info or blocking user if SMTP fails (internal logs will show)
+        # Or return error if strictly needed for debugging. For now, print to console.
+        return jsonify({'message': 'Error al enviar correo (Revisa logs servidor)'}), 500
+
+    return jsonify({'message': 'Si el email existe, recibirás un enlace.'}), 200
+
+@app.route('/api/auth/reset-password', methods=['POST'])
+def reset_password():
+    data = request.json
+    token = data.get('token')
+    new_password = data.get('new_password')
+    
+    try:
+        email = s.loads(token, salt='email-confirm', max_age=3600)
+    except SignatureExpired:
+        return jsonify({'error': 'El enlace ha expirado.'}), 400
+    except Exception:
+        return jsonify({'error': 'Token inválido.'}), 400
+        
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({'error': 'Usuario no encontrado.'}), 404
+        
+    user.set_password(new_password)
+    db.session.commit()
+    
+    return jsonify({'message': 'Contraseña actualizada exitosamente.'}), 200
 
 @app.route('/api/auth/logout', methods=['POST'])
 def logout():
@@ -164,9 +238,84 @@ def get_current_user():
             return jsonify({
                 'id': user.id, 
                 'name': user.name,
-                'avatar_path': user.avatar_path
+                'avatar_path': user.avatar_path,
+                'is_admin': user.is_admin
             }), 200
     return jsonify({'error': 'Not logged in'}), 401
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return jsonify({'error': 'Unauthorized'}), 401
+        user = User.query.get(session['user_id'])
+        if not user or not user.is_admin:
+            return jsonify({'error': 'Forbidden: Admin access required'}), 403
+        return f(*args, **kwargs)
+    return decorated_function
+
+# --- Admin Routes ---
+
+@app.route('/api/admin/users', methods=['GET'])
+@admin_required
+def admin_get_users():
+    users = User.query.all()
+    user_list = []
+    for u in users:
+        user_list.append({
+            'id': u.id,
+            'email': u.email,
+            'name': u.name,
+            'is_admin': u.is_admin
+        })
+    return jsonify(user_list), 200
+
+@app.route('/api/admin/users/<int:user_id>', methods=['DELETE'])
+@admin_required
+def admin_delete_user(user_id):
+    if user_id == session['user_id']:
+        return jsonify({'error': 'Cannot delete yourself'}), 400
+    
+    user = User.query.get_or_404(user_id)
+    
+    # Optional: Delete associated groups/expenses (Cascade logic here if needed)
+    # For now, we will just delete the user. SQLite might leave orphans if no cascade set in models.
+    # Group.created_by is ForeignKey. 
+    
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({'message': 'User deleted successfully'}), 200
+
+@app.route('/api/admin/groups', methods=['GET'])
+@admin_required
+def admin_get_groups():
+    groups = Group.query.order_by(Group.created_at.desc()).all()
+    group_list = []
+    for g in groups:
+        creator = User.query.get(g.created_by)
+        creator_name = creator.name if creator else "Unknown"
+        group_list.append({
+            'id': g.id,
+            'name': g.name,
+            'created_at': g.created_at.isoformat(),
+            'created_by_name': creator_name,
+            'participant_count': len(g.participants)
+        })
+    return jsonify(group_list), 200
+
+@app.route('/api/admin/groups/<int:group_id>', methods=['DELETE'])
+@admin_required
+def admin_delete_group(group_id):
+    group = Group.query.get_or_404(group_id)
+    
+    # Delete associated expenses/participants manually if cascade not set
+    ExpenseSplit.query.filter(ExpenseSplit.expense_id.in_([e.id for e in group.expenses])).delete(synchronize_session=False)
+    Expense.query.filter_by(group_id=group.id).delete()
+    Participant.query.filter_by(group_id=group.id).delete()
+    
+    db.session.delete(group)
+    db.session.commit()
+    return jsonify({'message': 'Group deleted successfully'}), 200
 
 # --- User Profile Routes ---
 

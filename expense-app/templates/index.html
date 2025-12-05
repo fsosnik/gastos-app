@@ -62,6 +62,10 @@
                                 class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700">
                                 <i class="fas fa-user-circle mr-2"></i>Mi Perfil
                             </a>
+                            <a href="#" onclick="app.showAdminView()" id="nav-item-admin"
+                                class="hidden block px-4 py-2 text-sm text-yellow-600 hover:bg-gray-100 dark:text-yellow-400 dark:hover:bg-gray-700 font-bold">
+                                <i class="fas fa-shield-alt mr-2"></i>Panel Admin
+                            </a>
                             <div class="border-t border-gray-100 dark:border-gray-700"></div>
                             <a href="#" onclick="app.logout()"
                                 class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-700">
@@ -145,6 +149,11 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Contraseña 🔒</label>
                     <input type="password" id="login-password"
                         class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <div class="text-right mt-1">
+                        <a href="#" onclick="app.showForgotPassword()"
+                            class="text-sm text-indigo-600 hover:underline dark:text-indigo-400">¿Olvidé mi
+                            contraseña?</a>
+                    </div>
                 </div>
                 <button onclick="app.login()"
                     class="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700 transition mb-4">Entrar
@@ -183,6 +192,44 @@
                     ¿Ya tienes cuenta? <a href="#" onclick="app.showLogin()"
                         class="text-indigo-600 font-semibold hover:underline dark:text-indigo-400">Inicia sesión</a>
                 </p>
+            </div>
+        </div>
+
+        <!-- View: Forgot Password -->
+        <div id="view-forgot-password" class="hidden fade-in max-w-md mx-auto mt-10">
+            <div class="bg-white p-8 rounded-xl shadow-lg dark:bg-gray-800 dark:border dark:border-gray-700">
+                <h2 class="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-white">Recuperar Contraseña 🔑
+                </h2>
+                <p class="text-gray-600 dark:text-gray-400 mb-6 text-center text-sm">Ingresa tu email y te enviaremos un
+                    enlace para restablecer tu tu contraseña.</p>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Email 📧</label>
+                    <input type="email" id="forgot-email"
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+                <button onclick="app.requestPasswordReset()"
+                    class="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700 transition mb-4">Enviar
+                    Enlace 📨</button>
+                <button onclick="app.showLogin()"
+                    class="w-full border border-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 transition">Volver
+                    al Login</button>
+            </div>
+        </div>
+
+        <!-- View: Reset Password -->
+        <div id="view-reset-password" class="hidden fade-in max-w-md mx-auto mt-10">
+            <div class="bg-white p-8 rounded-xl shadow-lg dark:bg-gray-800 dark:border dark:border-gray-700">
+                <h2 class="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-white">Nueva Contraseña 🔒</h2>
+                <input type="hidden" id="reset-token">
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Nueva
+                        Contraseña</label>
+                    <input type="password" id="reset-new-password"
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+                <button onclick="app.resetPassword()"
+                    class="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700 transition mb-4">Cambiar
+                    Contraseña ✅</button>
             </div>
         </div>
 
