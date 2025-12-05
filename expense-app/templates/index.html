@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gastos Compartidos 💸</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body
+    class="bg-gray-50 text-gray-800 font-sans min-h-screen dark:bg-gray-900 dark:text-gray-100 transition-colors duration-200">
+
+    <!-- Navigation -->
+    <nav class="bg-indigo-600 text-white shadow-lg sticky top-0 z-50 dark:bg-indigo-900">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+            <h1 class="text-xl font-bold cursor-pointer" onclick="app.showHome()">
+                <i class="fas fa-wallet mr-2"></i>Cuentas Claras 💰
+            </h1>
+            <div id="nav-actions" class="hidden space-x-4 flex items-center">
+                <button onclick="app.toggleTheme()" class="hover:text-indigo-200 p-2 rounded-full">
+                    <i id="theme-icon" class="fas fa-moon"></i>
+                </button>
+                <button onclick="app.showGroupView(app.currentGroupId)" id="nav-btn-expenses"
+                    class="hover:text-indigo-200 hidden">Gastos 📝</button>
+                <button onclick="app.showBalanceView()" id="nav-btn-balances"
+                    class="hover:text-indigo-200 hidden">Saldos ⚖️</button>
+                <!-- User Dropdown -->
+                <div class="relative hidden" id="user-menu-container">
+                    <button onclick="app.toggleUserMenu()" class="flex items-center space-x-2 focus:outline-none">
+                        <img id="nav-user-avatar" src="https://ui-avatars.com/api/?name=User" alt="Avatar"
+                            class="w-8 h-8 rounded-full border border-indigo-300">
+                        <span id="user-display-name" class="text-sm font-semibold hidden md:block">Usuario</span>
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </button>
+                    <!-- Dropdown Content -->
+                    <div id="user-dropdown"
+                        class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 dark:bg-gray-800 dark:border dark:border-gray-700">
+                        <a href="#" onclick="app.showProfileView()"
+                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700">
+                            <i class="fas fa-user-circle mr-2"></i>Mi Perfil
+                        </a>
+                        <div class="border-t border-gray-100 dark:border-gray-700"></div>
+                        <a href="#" onclick="app.logout()"
+                            class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-700">
+                            <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto px-4 py-6">
+
+        <!-- View: Login -->
+        <div id="view-login" class="fade-in max-w-md mx-auto mt-10">
+            <div class="bg-white p-8 rounded-xl shadow-lg dark:bg-gray-800 dark:border dark:border-gray-700">
+                <h2 class="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-white">Iniciar Sesión 👋</h2>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Email 📧</label>
+                    <input type="email" id="login-email"
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Contraseña 🔒</label>
+                    <input type="password" id="login-password"
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+                <button onclick="app.login()"
+                    class="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700 transition mb-4">Entrar
+                    🚀</button>
+                <p class="text-center text-sm text-gray-600 dark:text-gray-400">
+                    ¿No tienes cuenta? <a href="#" onclick="app.showRegister()"
+                        class="text-indigo-600 font-semibold hover:underline dark:text-indigo-400">Regístrate aquí</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- View: Register -->
+        <div id="view-register" class="hidden fade-in max-w-md mx-auto mt-10">
+            <div class="bg-white p-8 rounded-xl shadow-lg dark:bg-gray-800 dark:border dark:border-gray-700">
+                <h2 class="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-white">Crear Cuenta ✨</h2>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Nombre Completo
+                        👤</label>
+                    <input type="text" id="register-name"
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Email 📧</label>
+                    <input type="email" id="register-email"
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Contraseña 🔒</label>
+                    <input type="password" id="register-password"
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+                <button onclick="app.register()"
+                    class="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition mb-4">Registrarse
+                    ✅</button>
+                <p class="text-center text-sm text-gray-600 dark:text-gray-400">
+                    ¿Ya tienes cuenta? <a href="#" onclick="app.showLogin()"
+                        class="text-indigo-600 font-semibold hover:underline dark:text-indigo-400">Inicia sesión</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- View: Home / Create Group -->
+        <div id="view-home" class="hidden fade-in">
+            <div class="text-center py-10">
+                <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Gestiona Gastos Grupales 🤝</h2>
+                <p class="text-gray-600 mb-8 dark:text-gray-300">Lleva el control de cuentas, viajes y salidas
+                    fácilmente.</p>
+
+                <div
+                    class="bg-white p-6 rounded-xl shadow-md max-w-md mx-auto dark:bg-gray-800 dark:border dark:border-gray-700">
+                    <h3 class="text-xl font-semibold mb-4 dark:text-gray-100">Crear Nuevo Grupo ✨</h3>
+                    <input type="text" id="new-group-name" placeholder="Nombre del Grupo (ej. Viaje al Sur) 🏔️"
+                        class="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <input type="text" id="new-group-participants" placeholder="Participantes (separados por coma) 👥"
+                        class="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <select id="new-group-currency"
+                        class="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-indigo-500 outline-none bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="USD">USD ($)</option>
+                        <option value="EUR">EUR (€)</option>
+                        <option value="ARS">ARS ($)</option>
+                        <option value="MXN">MXN ($)</option>
+                        <option value="COP">COP ($)</option>
+                        <option value="CLP">CLP ($)</option>
+                        <option value="GTQ">GTQ (Q)</option>
+                    </select>
+                    <button onclick="app.createGroup()"
+                        class="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition">Crear
+                        Grupo 🚀</button>
+                </div>
+            </div>
+
+            <div id="recent-groups" class="mt-8 hidden">
+                <h3 class="text-lg font-semibold mb-4 dark:text-gray-100">Tus Grupos</h3>
+                <div id="groups-list" class="grid gap-4 md:grid-cols-2">
+                </div>
+            </div>
+        </div>
+
+        <!-- View: Group Expenses -->
+        <div id="view-group" class="hidden fade-in">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 id="group-title" class="text-2xl font-bold text-gray-900 dark:text-white">Nombre del Grupo</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400"><span id="participant-count">0</span>
+                        participantes 👤</p>
+                </div>
+                <button onclick="app.toggleAddExpenseModal()"
+                    class="bg-indigo-600 text-white px-4 py-2 rounded-lg shadow hover:bg-indigo-700 transition">
+                    <i class="fas fa-plus mr-2"></i>Agregar Gasto 💸
+                </button>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex border-b border-gray-200 dark:border-gray-700 mb-6">
+                <button onclick="app.switchTab('expenses')" id="tab-expenses"
+                    class="py-2 px-4 border-b-2 border-indigo-600 text-indigo-600 font-medium dark:text-indigo-400 dark:border-indigo-400">Gastos
+                    📝</button>
+                <button onclick="app.switchTab('balances')" id="tab-balances"
+                    class="py-2 px-4 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium dark:text-gray-400 dark:hover:text-gray-300">Saldos
+                    ⚖️</button>
+            </div>
+
+            <!-- Expenses List -->
+            <div id="expenses-container" class="space-y-4">
+                <div class="text-center text-gray-500 py-8 dark:text-gray-400">Cargando gastos... ⏳</div>
+            </div>
+
+            <!-- Balances Container -->
+            <div id="balances-container" class="hidden space-y-6">
+            </div>
+        </div>
+
+        <!-- View: User Profile -->
+        <div id="view-profile" class="hidden fade-in max-w-2xl mx-auto">
+            <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Mi Perfil 👤</h2>
+
+            <div class="bg-white p-8 rounded-xl shadow-md dark:bg-gray-800 dark:border dark:border-gray-700">
+
+                <!-- Avatar Section -->
+                <div class="flex flex-col items-center mb-8">
+                    <div class="relative group cursor-pointer"
+                        onclick="document.getElementById('avatar-input').click()">
+                        <img id="profile-avatar" src="https://ui-avatars.com/api/?name=User"
+                            class="w-32 h-32 rounded-full object-cover border-4 border-indigo-100 dark:border-gray-600">
+                        <div
+                            class="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <i class="fas fa-camera text-white text-2xl"></i>
+                        </div>
+                    </div>
+                    <input type="file" id="avatar-input" class="hidden" accept="image/*"
+                        onchange="app.uploadAvatar(this)">
+                    <p class="text-sm text-gray-500 mt-2 dark:text-gray-400">Click para cambiar foto 📸</p>
+                </div>
+
+                <!-- Form -->
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Nombre de
+                            Usuario</label>
+                        <input type="text" id="profile-name"
+                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    </div>
+
+                    <div class="border-t border-gray-100 pt-6 dark:border-gray-700">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Cambiar Contraseña</h3>
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <div>
+                                <label
+                                    class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Contraseña
+                                    Actual</label>
+                                <input type="password" id="profile-current-password"
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Nueva
+                                    Contraseña</label>
+                                <input type="password" id="profile-new-password"
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end pt-4">
+                        <button onclick="app.updateProfile()"
+                            class="bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-indigo-700 transition shadow-lg">
+                            Guardar Cambios 💾
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal: Add Expense -->
+    <div id="modal-add-expense" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div
+            class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden dark:bg-gray-800 dark:border dark:border-gray-700">
+            <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                <h3 class="text-lg font-bold dark:text-white">Nuevo Gasto 🧾</h3>
+                <button onclick="app.toggleAddExpenseModal()"
+                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Descripción
+                        📝</label>
+                    <input type="text" id="expense-title"
+                        class="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Monto 💲</label>
+                    <input type="number" id="expense-amount" step="0.01"
+                        class="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Pagado por 💳</label>
+                    <select id="expense-payer"
+                        class="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    </select>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">Dividir entre
+                        👯‍♂️</label>
+                    <div id="expense-involved"
+                        class="space-y-2 max-h-40 overflow-y-auto p-2 border border-gray-100 rounded dark:border-gray-700 dark:bg-gray-700 dark:text-white">
+                    </div>
+                </div>
+                <button onclick="app.addExpense()"
+                    class="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700 transition">Guardar
+                    Gasto 💾</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+
+</html>

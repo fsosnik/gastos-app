@@ -1,0 +1,18 @@
+# .htaccess for Flask on SiteGround (Subdirectory /gastos)
+
+# SiteGround Specific Directives
+PassengerEnabled on
+# Path based on your SSH session info:
+PassengerAppRoot /home/u1997-exgizjrryrca/www/sosnik.com.ar/public_html/gastos
+PassengerPython /home/u1997-exgizjrryrca/www/sosnik.com.ar/public_html/gastos/venv/bin/python3
+
+# Standard Rewrite Rules
+RewriteEngine On
+RewriteBase /gastos/
+
+# If the request is for a real file or directory, serve it directly
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Otherwise, forward to passenger_wsgi.py
+RewriteRule ^(.*)$ passenger_wsgi.py [L]
