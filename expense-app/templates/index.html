@@ -137,7 +137,8 @@
         </div>
 
         <!-- View: Login -->
-        <div id="view-login" class="fade-in max-w-md mx-auto mt-10">
+        <!-- View: Login -->
+        <div id="view-login" class="hidden fade-in max-w-md mx-auto mt-10">
             <div class="bg-white p-8 rounded-xl shadow-lg dark:bg-gray-800 dark:border dark:border-gray-700">
                 <h2 class="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-white">Iniciar Sesión 👋</h2>
                 <div class="mb-4">
@@ -360,6 +361,60 @@
                             Guardar Cambios 💾
                         </button>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- View: Admin Panel -->
+         <div id="view-admin" class="hidden fade-in max-w-5xl mx-auto">
+            <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white flex items-center">
+                <i class="fas fa-shield-alt text-yellow-500 mr-2"></i> Panel de Administración
+            </h2>
+            
+            <!-- Tabs -->
+            <div class="flex border-b border-gray-200 dark:border-gray-700 mb-6">
+                <button onclick="app.switchAdminTab('users')" id="tab-admin-users" class="py-2 px-4 border-b-2 border-indigo-600 text-indigo-600 font-medium dark:text-indigo-400 dark:border-indigo-400">Usuarios 👤</button>
+                <button onclick="app.switchAdminTab('groups')" id="tab-admin-groups" class="py-2 px-4 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium dark:text-gray-400 dark:hover:text-gray-300">Grupos 👥</button>
+            </div>
+            
+            <!-- Users Table -->
+            <div id="admin-users-container" class="bg-white rounded-lg shadow overflow-hidden dark:bg-gray-800 dark:border dark:border-gray-700">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-gray-600 dark:text-gray-300">
+                        <thead class="bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 uppercase font-medium">
+                            <tr>
+                                <th class="px-6 py-3">ID</th>
+                                <th class="px-6 py-3">Nombre</th>
+                                <th class="px-6 py-3">Email</th>
+                                <th class="px-6 py-3">Admin</th>
+                                <th class="px-6 py-3 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-users-list" class="divide-y divide-gray-200 dark:divide-gray-700">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Groups Table -->
+            <div id="admin-groups-container" class="hidden bg-white rounded-lg shadow overflow-hidden dark:bg-gray-800 dark:border dark:border-gray-700">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-gray-600 dark:text-gray-300">
+                         <thead class="bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 uppercase font-medium">
+                            <tr>
+                                <th class="px-6 py-3">ID</th>
+                                <th class="px-6 py-3">Nombre del Grupo</th>
+                                <th class="px-6 py-3">Creado Por</th>
+                                <th class="px-6 py-3">Miembros</th>
+                                <th class="px-6 py-3">Fecha</th>
+                                <th class="px-6 py-3 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                         <tbody id="admin-groups-list" class="divide-y divide-gray-200 dark:divide-gray-700">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
